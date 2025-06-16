@@ -3,8 +3,14 @@ const router = express.Router();
 const Task = require('../models/task');
 
 router.get('/', async (req, res) => {
+    const {id,role} = req.user;
     try {
-        const tasks = await Task.find().populate('assignedTo', 'username').populate('createdBy', 'username');
+        let tasks;
+        if (role === 'user') {
+            tasks = await Task.find({ createdBy: id });
+        } else {
+            tasks = await Task.find().populate('assignedTo', 'username').populate('createdBy', 'username');
+        }
         res.status(200).json(tasks);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching tasks', error });
@@ -13,8 +19,15 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
+    const { role } = req.user;
+
     try {
-        const task = await Task.findById(id).populate('assignedTo', 'username').populate('createdBy', 'username');
+        let task;
+        if (role === 'user') {
+            task = await Task.findById(id).populate('assignedTo', 'username').populate('createdBy', 'username').where({ createdBy: req.user.id });
+        } else {
+        task = await Task.findById(id).populate('assignedTo', 'username').populate('createdBy', 'username');
+        }
         if (!task) {
             return res.status(404).json({ message: 'Task not found' });
         }
@@ -25,7 +38,8 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-    const { title, description, status, assignedTo, createdBy } = req.body;
+    const { title, description, status, assignedTo } = req.body;
+    const createdBy = req.user.id; 
     try {
         const newTask = new Task({ title, description, status, assignedTo, createdBy });
         await newTask.save();

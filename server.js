@@ -19,7 +19,7 @@ const userRoutes = require('./routes/userRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const authRoutes = require('./routes/authRoutes');
 app.use('/auth', authRoutes);
-app.use('/users', authorizeUser, authorizeAdmin, userRoutes);
+app.use('/users', authorizeUser, authorizeManager, userRoutes);
 app.use('/tasks', authorizeUser, taskRoutes);
 
 app.get('/', (req, res) => {
@@ -43,19 +43,17 @@ function authorizeUser(req, res, next) {
   }
   
   try {
-    console.log('Token received:', token);
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
-    console.log('User authorized:', req.user);
     next();
   } catch (error) {
     return res.status(403).json({ message: 'Forbidden', error: error.message });
   }
 }
 
-function authorizeAdmin(req, res, next) {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Forbidden' , error: 'Admin access required' });
+function authorizeManager(req, res, next) {
+  if (req.user.role !== 'manager') {
+    return res.status(403).json({ message: 'Forbidden' , error: 'Manager access required' });
   }
   next();
 }
