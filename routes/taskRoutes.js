@@ -7,7 +7,7 @@ router.get('/', async (req, res) => {
     try {
         let tasks;
         if (role === 'user') {
-            tasks = await Task.find({ createdBy: id });
+            tasks = await Task.find({ assignedTo: id });
         } else {
             tasks = await Task.find().populate('assignedTo', 'username').populate('createdBy', 'username');
         }
